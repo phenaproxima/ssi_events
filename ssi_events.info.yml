@@ -1,0 +1,6 @@
+name: SSI Events
+description: Code changes for Events
+package: DevCollaborative
+type: module
+version: 1.0
+core: 8.x

@@ -1,0 +1,5 @@
+services:
+  ssi_events.route_subscriber:
+    class: Drupal\ssi_events\Routing\RouteSubscriber
+    tags:
+    - { name: event_subscriber }
