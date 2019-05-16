@@ -2,12 +2,9 @@
 
 namespace Drupal\ssi_events\Controller;
 
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\node\Controller\NodeViewController;
 use Drupal\Core\Routing\TrustedRedirectResponse;
-
 
 /**
  * Custom node redirect controller
@@ -16,33 +13,20 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
 */
 class NodeRedirectController extends NodeViewController {
 
+  /**
+   * {@inheritdoc}
+   */
   public function view(EntityInterface $node, $view_mode = 'full', $langcode = NULL) {
+    /** @var \Drupal\node\NodeInterface $node */
+    // If this is an event and the 'link directly to url' field is checked,
+    // then redirect to URL
+    if ($this->currentUser->isAnonymous() && $node->getType() === 'event' && $node->field_link_directly_to_event_url->value && !$node->get('field_url')->isEmpty()) {
+      return (new TrustedRedirectResponse($node->field_url->uri, 302))
+        ->addCacheableDependency($node);
+    }
 
-    $redirect = FALSE;
-    
-    if (\Drupal::currentUser()->isAnonymous()) {
-      // If this is an event and the 'link directly to url' field is checked,
-      // then redirect to URL
-      
-      if ($node->getType() == 'event') {
-        $checkbox = $node->get('field_link_directly_to_event_url')->getValue();
-        $url = $node->get('field_url')->getValue();
-  
-        if ($checkbox['0']['value'] == 1 && !empty($url)) {
-            $url = $url['0']['uri'];
-            $redirect = TRUE;
-        }
-      }
-    }
-    
-    if ($redirect == TRUE) {
-      $response = new TrustedRedirectResponse($url, 302);
-      $response->addCacheableDependency($node);
-    }
     // Otherwise just go to the full node
-    else {
-      $response = parent::view($node, $view_mode, $langcode);
-    }
-    return $response;
+    return parent::view($node, $view_mode, $langcode);
   }
+
 }
