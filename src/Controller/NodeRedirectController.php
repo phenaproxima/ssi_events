@@ -18,25 +18,31 @@ class NodeRedirectController extends NodeViewController {
 
   public function view(EntityInterface $node, $view_mode = 'full', $langcode = NULL) {
 
-    // If this is an event and the 'link directly to url' field is checked,
-    // then redirect to URL
     $redirect = FALSE;
-    if ($node->getType() == 'event') {
-      $checkbox = $node->get('field_link_directly_to_event_url')->getValue();
-      $url = $node->get('field_url')->getValue();
-
-      if ($checkbox['0']['value'] == 1 && !empty($url)) {
-          $url = $url['0']['uri'];
-          $redirect = TRUE;
+    
+    if (\Drupal::currentUser()->isAnonymous()) {
+      // If this is an event and the 'link directly to url' field is checked,
+      // then redirect to URL
+      
+      if ($node->getType() == 'event') {
+        $checkbox = $node->get('field_link_directly_to_event_url')->getValue();
+        $url = $node->get('field_url')->getValue();
+  
+        if ($checkbox['0']['value'] == 1 && !empty($url)) {
+            $url = $url['0']['uri'];
+            $redirect = TRUE;
+        }
       }
     }
-
+    
     if ($redirect == TRUE) {
-      return new TrustedRedirectResponse($url, 302);
+      $response = new TrustedRedirectResponse($url, 302);
+      $response->addCacheableDependency($node);
     }
     // Otherwise just go to the full node
     else {
-      return parent::view($node, $view_mode, $langcode);
+      $response = parent::view($node, $view_mode, $langcode);
     }
+    return $response;
   }
 }
